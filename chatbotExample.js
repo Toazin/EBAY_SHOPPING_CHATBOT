@@ -3,11 +3,29 @@ require('dotenv').config();
 const {
     Bot, Elements, Buttons, QuickReplies
 } = require("facebook-messenger-bot");
-var FBMessenger = require('fb-messenger');
-var messenger = new FBMessenger(process.env.PAGE_ACCESS_TOKEN);
-var express = require("express");
-var weather = require('./js/weatherAPI');
+//var FBMessenger = require('fb-messenger');
+const messenger = new FBMessenger(process.env.PAGE_ACCESS_TOKEN);
+const express = require("express");
+const weather = require('./js/weatherAPI');
+const ebay = require('ebay-api');
 
+var params = {
+  // add additional fields
+  //outputSelector: ['AspectHistogram'],
+
+  paginationInput: {
+    entriesPerPage: 10
+  },
+
+  itemFilter: [
+    {name: 'FreeShippingOnly', value: true}
+  ],
+    /*
+  domainFilter: [
+    {name: 'domainName', value: 'Digital_Cameras'}
+  ]
+    */
+};
 
 const bot = new Bot(process.env.PAGE_ACCESS_TOKEN, process.env.VERIFICATION);
 
@@ -15,7 +33,8 @@ bot.on('message', async message => {
     //console.log(message);
     const {
         sender
-    } = message;
+    } = message; //object destructor
+    
 
     /*
     await weather(message.text, function (currentWeather) {
@@ -33,12 +52,48 @@ bot.on('message', async message => {
 
     if (text) {
         console.log(text); // 'hey'
+        //Metodo(texto) --> regresa out (Ya con boton, texto e imagenes.)
+        params.keywords = text.split(" ");
         //Text
         let out = new Elements();
         out.add({
             text: `hey ${sender.first_name}, how are you!`
         });
         await bot.send(sender.id, out);
+        ebay.xmlRequest({
+                serviceName: 'Finding',
+                opType: 'findItemsByKeywords',
+                appId: process.env.EBAYAPPID, // FILL IN YOUR OWN APP KEY, GET ONE HERE: https://publisher.ebaypartnernetwork.com/PublisherToolsAPI
+                params: params,
+                parser: ebay.parseResponseJson // (default)
+            },
+            // gets all the items together in a merged array
+            function itemsCallback(error, itemsResponse) {
+                if (error) throw error;
+
+                var items = itemsResponse.searchResult.item;
+
+                console.log('Found', items.length, 'items');
+                out = new Elements();
+                for (var i = 0; i < items.length; i++) {
+                    
+                    buttons = new Buttons();
+                    buttons.add({
+                        text: 'Ebay',
+                        url: items[i].viewItemURL
+                    });
+                    out.add({
+                        image: items[i].galleryURL,
+                        text: items[i].title,
+                        buttons
+                    });    
+                    console.log('- ' + items[i].title);
+                    
+                    //console.log(JSON.stringify(items[i],null,2));
+                }
+            bot.send(sender.id, out);
+            }
+        );
     }
 
     if (images) {
@@ -61,7 +116,7 @@ bot.on('message', async message => {
 
 
     //await Bot.wait(1000);
-
+/*
     out = new Elements();
     out.add({
         image: sender.profile_pic
@@ -163,6 +218,7 @@ bot.on('message', async message => {
 
 
     //await messenger.sendImageMessage(sender.id, sender.profile_pic);
+    */
 });
 
 
