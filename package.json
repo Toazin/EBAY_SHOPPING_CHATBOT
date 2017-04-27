@@ -9,11 +9,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/vision": "^0.11.2",
     "dotenv": "^4.0.0",
     "ebay-api": "^1.13.1",
     "express": "^4.15.0",
     "facebook-messenger-bot": "0.2.0",
     "fb-messenger": "^1.1.0",
+    "moment": "^2.18.1",
     "yargs": "^3.15.0"
   }
 }
