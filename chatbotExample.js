@@ -1,7 +1,24 @@
 require('dotenv').config();
 require('./userData.js');
 require('./responses.js');
-var moment = require('moment');
+const moment = require('moment');
+const fs = require('fs');
+const request = require('request');
+const download = function(uri, filename, callback){
+  request.head(uri, function(err, res, body){
+    console.log('content-type:', res.headers['content-type']);
+    console.log('content-length:', res.headers['content-length']);
+
+    request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+  });
+};
+const types = [
+  'face',
+  'text',
+  'label',
+  'logos',
+  'similar'
+];
 
 const {
     Bot, Elements, Buttons, QuickReplies
@@ -43,6 +60,10 @@ var users = {};
 // };
 
 const bot = new Bot(process.env.PAGE_ACCESS_TOKEN, process.env.VERIFICATION);
+const vision = require('@google-cloud/vision')({
+  projectId: process.env.PROJECTID,
+  keyFilename: process.env.VISIONKEY
+});
 
 bot.on('postback', async (event, message, data) => {
     if(!message) return;
@@ -161,9 +182,6 @@ bot.on('message', async message => {
     //testout = new Elements();
 
     if (text) {
-
-
-
       var intent = 1;
       let out = new Elements();
       let msg;
@@ -193,7 +211,7 @@ bot.on('message', async message => {
           await bot.send(sender.id, out);
           break;
         case "execute query":
-          let product = "Camara Sony";
+          let product = "MacBook pro";
           user.addQuery(product);
           user.queryOptions.keywords = product.split(" ");
           let qty = user.queryOptions.paginationInput.entriesPerPage;
@@ -258,57 +276,199 @@ bot.on('message', async message => {
           break;
 
       }
-      //Validate Last login for quick response
-
-      //Validate text
-
-      //
-
-
-        //console.log(text); // 'hey'
-        //Metodo(texto) --> regresa out (Ya con boton, texto e imagenes.)
-        //params.keywords = text.split(" ");
-        //Text
-
-
-    //     ebay.xmlRequest({
-    //             serviceName: 'Finding',
-    //             opType: 'findItemsByKeywords',
-    //             appId: process.env.EBAYAPPID, // FILL IN YOUR OWN APP KEY, GET ONE HERE: https://publisher.ebaypartnernetwork.com/PublisherToolsAPI
-    //             params: params,
-    //             parser: ebay.parseResponseJson // (default)
-    //         },
-    //         // gets all the items together in a merged array
-    //         function itemsCallback(error, itemsResponse) {
-    //             if (error) throw error;
-    //
-    //             var items = itemsResponse.searchResult.item;
-    //
-    //             console.log('Found', items.length, 'items');
-    //             out = new Elements();
-    //             for (var i = 0; i < items.length; i++) {
-    //
-    //                 buttons = new Buttons();
-    //                 buttons.add({
-    //                     text: 'Ebay',
-    //                     url: items[i].viewItemURL
-    //                 });
-    //                 out.add({
-    //                     image: items[i].galleryURL,
-    //                     text: items[i].title,
-    //                     buttons
-    //                 });
-    //                 console.log('- ' + items[i].title);
-    //
-    //                 //console.log(JSON.stringify(items[i],null,2));
-    //             }
-    //         bot.send(sender.id, out);
-    //         });
      }
 
     if (images) {
-        console.log(images); // ['http://...', 'http://...']
-        //await messenger.sendImageMessage(sender.id, images);
+        var url = __dirname + "/tmp.png";
+        let out = new Elements();
+        let msg;
+        console.log("URL IMAGEN: " , images[0]);
+        download(images[0], 'tmp.png', function(){
+          console.log('Image Saved into server');
+          /*vision.detect(url,types, function(err, detection, apiResponse){
+            console.log("ERROR", err);
+            var logos = detection.logos;
+            var label = detection.labels;
+            console.log("Detect: ", detection);
+            user.queryOptions.keywords = detection.labels;
+            ebay.xmlRequest({
+                serviceName: 'Finding',
+                opType: 'findItemsByKeywords',
+                appId: process.env.EBAYAPPID,
+                params: user.queryOptions,
+                parser: ebay.parseResponseJson
+            },
+            function itemsCallback(error, itemsResponse) {
+                if (error) throw error;
+                out = new Elements();
+                var items = itemsResponse.searchResult.item;
+                //console.log("Response", itemsResponse.searchResult)
+                if(!items){
+                  msg = "Sorry no results for your query!";
+                  out.add({text: msg});
+                  bot.send(sender.id, out);
+                  return;
+                }
+                //console.log('Found', items.length, 'items');
+                out = new Elements();
+                for (var i = 0; i < items.length; i++) {
+                    //console.log("shippingInfo: ", items[i].shippingInfo);
+                    let cost = items[i].sellingStatus.convertedCurrentPrice.amount;
+                    //console.log("sellingStatus: ", cost);
+                    if(items[i].pictureURLLarge){
+                      imgUrl = items[i].pictureURLLarge;
+                    }else{
+                      imgUrl = items[i].galleryURL;
+                    }
+                    buttons = new Buttons();
+                    buttons.add({
+                        text: 'See on Ebay',
+                        url: items[i].viewItemURL
+                    });
+                    out.add({
+                        image: imgUrl,
+                        text: cost + "$USD - " + items[i].title,
+                        buttons
+                    });
+                    //console.log('- ' + items[i].title);
+                }
+                bot.send(sender.id, out);
+            });
+          });*/
+
+          vision.detectSimilar(url)
+          .then((data) => {
+            console.log("SIMILAR", data[1].responses[0].webDetection);
+            const results = data[1].responses[0].webDetection;
+            user.queryOptions.keywords = [];
+            if (results.fullMatchingImages.length > 0) {
+              console.log(`Full matches found: ${results.fullMatchingImages.length}`);
+              results.fullMatchingImages.forEach((image) => {
+                console.log(`  URL: ${image.url}`);
+                console.log(`  Score: ${image.score}`);
+              });
+            }
+
+            if (results.partialMatchingImages.length > 0) {
+              console.log(`Partial matches found: ${results.partialMatchingImages.length}`);
+              results.partialMatchingImages.forEach((image) => {
+                console.log(`  URL: ${image.url}`);
+                console.log(`  Score: ${image.score}`);
+              });
+            }
+
+            if (results.webEntities.length > 0) {
+              console.log(`Web entities found: ${results.webEntities.length}`);
+              results.webEntities.forEach((webEntity) => {
+                if(webEntity.score > .9) user.queryOptions.keywords.push(webEntity.description);
+                console.log(`  Description: ${webEntity.description}`);
+                console.log(`  Score: ${webEntity.score}`);
+              });
+            }
+
+            //user.queryOptions.keywords = detection.labels;
+            msg = "I think your serching for something with: ";
+
+            user.queryOptions.keywords.push(user.queryOptions.keywords[0].split(" ")[0]);
+            console.log("RESULTS TO SEND: ", user.queryOptions.keywords);
+            for(var j = 0; j < user.queryOptions.keywords.length; j++)
+            {
+              //console.log("Split: ", user.queryOptions.keywords[j].split(" "));
+              if(user.queryOptions.keywords[j].split(" ").length > 1)
+              {
+                console.log("Splitie");
+                if(!user.queryOptions.keywords.includes(user.queryOptions.keywords[j].split(" ")[0]))
+                  user.queryOptions.keywords.push(user.queryOptions.keywords[j].split(" ")[0]);
+              }
+              msg = msg + " - " + user.queryOptions.keywords[j];
+            }
+            console.log("Final: ", user.queryOptions.keywords);
+            out.add({text: msg});
+            bot.send(sender.id, out);
+
+            ebay.xmlRequest({
+                  serviceName: 'Finding',
+                  opType: 'findItemsByKeywords',
+                  appId: process.env.EBAYAPPID,
+                  params: user.queryOptions,
+                  parser: ebay.parseResponseJson
+              },
+              function itemsCallback(error, itemsResponse) {
+                  if (error) throw error;
+                  out = new Elements();
+                  var items = itemsResponse.searchResult.item;
+                  //console.log("Response", itemsResponse.searchResult)
+                  if(!items){
+                    msg = "Sorry no results for your query!";
+                    out.add({text: msg});
+                    bot.send(sender.id, out);
+                    return;
+                  }
+                  //console.log('Found', items.length, 'items');
+                  out = new Elements();
+                  for (var i = 0; i < items.length; i++) {
+                      //console.log("shippingInfo: ", items[i].shippingInfo);
+                      let cost = items[i].sellingStatus.convertedCurrentPrice.amount;
+                      //console.log("sellingStatus: ", cost);
+                      if(items[i].pictureURLLarge){
+                        imgUrl = items[i].pictureURLLarge;
+                      }else{
+                        imgUrl = items[i].galleryURL;
+                      }
+                      buttons = new Buttons();
+                      buttons.add({
+                          text: 'See on Ebay',
+                          url: items[i].viewItemURL
+                      });
+                      out.add({
+                          image: imgUrl,
+                          text: cost + "$USD - " + items[i].title,
+                          buttons
+                      });
+                  }
+                  bot.send(sender.id, out);
+              });
+            });
+
+          vision.detectLabels(url)
+            .then((results) => {
+              console.log("LABELS", results[0]);
+              const labels = results[0];
+
+              console.log('Labels:');
+              labels.forEach((label) => console.log(label));
+            });
+
+          vision.detectLandmarks(url)
+            .then((results) => {
+              console.log("LANDMARKS", results[0]);
+              const landmarks = results[0];
+
+              console.log('Landmarks:');
+              landmarks.forEach((landmark) => console.log(landmark));
+            });
+
+
+          vision.detectLogos(url)
+          .then((results) => {
+            console.log("LOGOS", results[0]);
+            const logos = results[0];
+
+            console.log('Logos:');
+            logos.forEach((logo) => console.log(logo));
+          });
+
+          vision.detectProperties(url)
+          .then((results) => {
+            console.log("PROPERTIES", results[0]);
+            const properties = results[0];
+
+            console.log('Colors:');
+            properties.colors.forEach((color) => console.log(color));
+          });
+
+        });
+
     }
 
     if (videos) {
@@ -322,113 +482,6 @@ bot.on('message', async message => {
     if (audio) {
         console.log(audio); // url
     }
-
-
-
-    //await Bot.wait(1000);
-/*
-    out = new Elements();
-    out.add({
-        image: sender.profile_pic
-    });
-    await bot.send(sender.id, out);
-
-    //await Bot.wait(1000);
-
-    let buttons = new Buttons();
-    buttons.add({
-        text: 'Google',
-        url: 'http://google.com'
-    });
-    buttons.add({
-        text: 'Yahoo',
-        url: 'http://yahoo.com'
-    });
-    buttons.add({
-        text: 'Bing',
-        url: 'http://bing.com'
-    });
-    out = new Elements();
-    out.add({
-        text: 'search engines',
-        subtext: 'click to get redirected',
-        buttons
-    }); // add a card
-    await bot.send(sender.id, out);
-
-    buttons = new Buttons();
-    buttons.add({
-        text: 'Call us',
-        phone: '3315397492'
-    });
-    buttons.add({
-        share: true
-    });
-    out = new Elements();
-    out.add({
-        text: 'ABC Flower shop',
-        subtext: 'Office hours 10am - 6pm',
-        buttons
-    }); // add a card
-    await bot.send(sender.id, out);
-
-    out = new Elements();
-    out.setListStyle('compact'); // or 'large'
-    out.add({
-        text: 'Item 1',
-        subtext: 'Subtitle'
-    }); // add list item
-    out.add({
-        text: 'Item 2',
-        subtext: 'Subtitle'
-    }); // add list item
-    await bot.send(sender.id, out);
-
-    buttons = new Buttons();
-    buttons.add({
-        text: 'Google',
-        url: 'http://google.com'
-    });
-    buttons.add({
-        text: 'Yahoo',
-        url: 'http://yahoo.com'
-    });
-    out = new Elements();
-    out.add({
-        image: 'http://google.com/logo.png',
-        text: 'hey',
-        buttons
-    }); // first card
-    out.add({
-        image: 'http://yahoo.com/logo.png',
-        text: 'hey',
-        buttons
-    }); // second card
-    await bot.send(sender.id, out);
-
-    let replies = new QuickReplies();
-    replies.add({
-        text: 'location',
-        isLocation: true
-    });
-    out = new Elements();
-    out.add({
-        text: 'Send us your location'
-    });
-    out.setQuickReplies(replies);
-    await bot.send(sender.id, out);
-
-    //await messenger.sendTextMessage(sender.id, message.text);
-    //await messenger.sendHScrollMessage(sender.id, elems);
-    //await messenger.sendButtonsMessage(sender.id, message.text,  buttons);
-    //await messenger.sendImageMessage(sender.id, "https://pbs.twimg.com/profile_images/789099010749505537/vNRHXVoY_400x400.jpg");
-
-
-
-
-
-    //await messenger.sendImageMessage(sender.id, sender.profile_pic);
-    */
 });
 
 

@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "chatbot-vision",
+  "private_key_id": "732c14d099c8587c8132a669f0586c46da8ed42f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDg/VzxUUoxEpUB\nnY2Q9AoWuG8L6O32El/8mt0FqT68oRT2k1nr/cZpQk8uxuzjTD5omgxf8fjdDKir\nwvsOchCyHio29HBIqJWroxpfc5jmy+jtHie5D/rMkDdGf8TJLuoaDR0TxJOx+TG3\neITuZmi31TXzdXnQL0pd4dL/rLs8NjliDLCP9P9kDAbiTnXNpiJr5ydIsFs/QzD+\nZL7O7ItsCoQUA/9hbQYyfLucKhjPMRVSXT//a4ZFFOWwg2tzFYRT+Yrfmw2uKF49\nA4VmOz2zgv88tSaS0vQGALPvbIlLXunxlydj+Ll1NHM/hzHwKOt8QwYUgOjGG0Kp\nvr7i0RpzAgMBAAECggEAZm1yPrqPWD/pbk7YAEHZxfY5N+bXTsuWv12Red5PHXkI\nHil/KpziE1GI0vblKaWwU9auA5AZiCkXMPsXaMAtManh9hrac3msifM7MnFiDtCO\nPkUYOHw55Z9SStooMJ8XHL0Tm8hGpSOZqrlHa3FcAzUh1rCIwGqHJK6GbLeqlgIO\n8ihMrKDg4lY+9O8Ul/3s1kDfrCiLK6/7/+vbS8yOftql/LhfTdTV8gcPMrj1685s\nOk3SiP0znCJxF71/vQuxeh2VNJ0+BEN+cNplpy/jyYfv9L8wJGf+rCBVns7oz18G\nutHob3aERRN6EJtaywRD6QL5L54Lw5qdusw8bn0iIQKBgQD597ihLSsqFu71eKed\n+e0fMAEF5RTqTlnd/sbsczy1vILUv+3VcSmOsIMgaQeQ3eLurwGjJhRAdOukl89A\nXahsdr75SfxXRuQrQkd3caux5LZXW7m7XsIvjY3Z7xFKJA48zdPmLzmGYFsM/vo9\n1HUwtEhzxSgqQHpLw3+GdnT21wKBgQDma1SELBFGxeV9xV/JHH7vOSxEFCb+9Y1P\n+qQkuzzW/rLaea6eBwRjByG3iJe7R7j1G1OKQdm4tU33mLunnNPChtnbqh92UDCU\nI5qJJ2lAs40L2ZN8vq/Iyz1C9lSF52BpX9GkPpshaN58fc0jjcI45lP+OiSU6Sxm\nJ+LVwvAxxQKBgHvzvRgff9IFQUV0KRoLPuxCL5+usypk4+dTWW0Sz74G1pGNAvDe\nho79NGiz7E6H2Oom2hb+4Pf9goRBy0HNr6DpWVXgvELDIo3Y9fti4JL8KPc0wusI\n2B4ggYDaLaaoLm80WalBLbNWwI+3OHvEiMA4Bd1ynLIm+v3q2afhwapNAoGANg2L\noA3uZ5nZAi4hED6dEGVrGvVXSIw2AEMd6nf6B71sG5BcBDpFLy3nHPTwE0D6BJXK\nfS6BcrElfyXXL7S8gG+9/6fjBZA+NSI9CFu0dzcnqVX7IVJiTkpPLrw2i8sBdPbD\naTI+lhHRz4Z7bxG8NDjkD0l4d25Tugs1TUwTqLkCgYEA0aQmeUqVlwnG7bDQWe/n\n9VdCgdZC4FBW4Sncietfwh/0c0AylOX885UTnx2J9xifslMWAnX3hXPV+1fyTPtn\ncfAuKLity/+d1idifbyCLUB0dWnSkC8qvXWgLvgbnbcUEyZpwLch8MdxjrKbMyxd\n1FSMEuC9Hr/JsbMcCr56KGs=\n-----END PRIVATE KEY-----\n",
+  "client_email": "vision-api@chatbot-vision.iam.gserviceaccount.com",
+  "client_id": "109485456605311347173",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/vision-api%40chatbot-vision.iam.gserviceaccount.com"
+}
