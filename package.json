@@ -16,6 +16,7 @@
     "facebook-messenger-bot": "0.2.0",
     "fb-messenger": "^1.1.0",
     "moment": "^2.18.1",
+    "node-wit": "^4.2.0",
     "yargs": "^3.15.0"
   }
 }

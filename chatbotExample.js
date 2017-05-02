@@ -43,6 +43,7 @@ const itemFilter = ["AuthorizedSellerOnly",
 //User MODULES
 const ebayHandler = require("./ebay/ebay.js");
 const visionHandler = require("./vision/visionHandler.js");
+const wit = require('./wit/witclient');
 
 var users = {};
 
@@ -63,7 +64,7 @@ bot.on('postback', async (event, message, data) => {
     //Check for change criteria
     if(data == "1" || data == "2" || data == "5" || data == "10"){
       user.queryOptions.paginationInput.entriesPerPage = data;
-      return
+      return;
     }
     if(event){
       if(event == "addFilter"){
@@ -71,9 +72,16 @@ bot.on('postback', async (event, message, data) => {
         console.log("Agreuge: ", user.queryOptions.itemFilter);
       }else if(event == "removeFilter"){
         //REMOVER! D:
+        for (var i = 0; i < user.queryOptions.itemFilter.length; i++) {
+          if(data == user.queryOptions.itemFilter[i].name){
+            user.queryOptions.itemFilter(i, 1);
+            break;
+          }
+        }
+        console.log("Removi: ", data);
       }
 
-      return
+      return;
     }
     function addFilter(){
 
@@ -138,36 +146,30 @@ bot.on('postback', async (event, message, data) => {
       await bot.send(message.sender.id, out);
       break;
     }
+    console.log("SALI2");
 });
 
 bot.on('message', async message => {
     const {
         sender
     } = message; //object destructor
-    await sender.fetch(`first_name,last_name,profile_pic`,true);//profile_pic`, true);
-
-    //Check User:
+    await sender.fetch(`first_name,last_name`,true);//profile_pic`, true);
     if(users[sender.id] == undefined){
         users[sender.id] = new User(sender.id,sender.first_name);
     }else{
         users[sender.id].notNew();
     }
     let user = users[sender.id];
-    console.log("user: ", user);
     console.log(`Received a message from ${sender.first_name} with id: ${sender.id}`);
     const {
         text, images, videos, location, audio
     } = message;
-
-    //Wit ai process identify
-    //testout = new Elements();
-
     if (text) {
-      //res = await (ebayHandler.ebayRequest(user));
-      var intent = 1;
+      var intent = await (wit.sendToWit(text));
+      console.log("Intension: ", intent);
       let out = new Elements();
       let msg;
-      switch (text) {
+      switch (intent.intention) {
         case "greeting":
           let difTime = moment.utc(moment(moment(new Date),"DD/MM/YYYY HH:mm:ss").diff(moment(user.getLastLogin(),"DD/MM/YYYY HH:mm:ss"))).format("m");
           if(user.isNew()){
@@ -192,8 +194,8 @@ bot.on('message', async message => {
           out.setQuickReplies(replies);
           await bot.send(sender.id, out);
           break;
-        case "execute query":
-          let product = "coffe cup";
+        case "search":
+          let product = intent.product;
           user.addQuery(product);
           user.queryOptions.keywords = product.split(" ");
           let qty = user.queryOptions.paginationInput.entriesPerPage;
@@ -218,10 +220,16 @@ bot.on('message', async message => {
           }
           break;
         case "bye":
-          msg = Resp.getBye();
+          msg = Resp.getRandom("bye");
           out.add({text: msg});
           await bot.send(sender.id, out);
           break;
+        case "what?":
+          msg = Resp.getWhat();
+          out.add({text: msg});
+          await bot.send(sender.id, out);
+          break;
+
       }
      }
 
@@ -297,6 +305,7 @@ bot.on('message', async message => {
         out.add({text: msg});
         bot.send(sender.id, out);
     }
+    console.log("SALI");
 });
 
 
