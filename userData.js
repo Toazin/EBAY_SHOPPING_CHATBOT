@@ -10,6 +10,7 @@ User = function (id, name) {
   this.id = id;
   this.state = 1;
   this.name = name;
+  this.confidence = .9;
   this.lastLogin = moment(new Date());
   this.queryOptions = {
     paginationInput:{entriesPerPage:5},
@@ -47,5 +48,11 @@ User = function (id, name) {
   }
   this.getFilters = function(){
     return this.queryOptions.itemFilter;
+  }
+  this.getConfidence = function () {
+    return this.confidence;
+  }
+  this.setConfidence = function (confidence) {
+    this.confidence = confidence;
   }
 }

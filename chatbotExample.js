@@ -40,24 +40,11 @@ const itemFilter = ["AuthorizedSellerOnly",
         "OutletSellerOnly",
         "TopRatedSellerOnly"];
 
+//User MODULES
+const ebayHandler = require("./ebay/ebay.js");
+const visionHandler = require("./vision/visionHandler.js");
+
 var users = {};
-// var params = {
-//   // add additional fields
-//   //outputSelector: ['AspectHistogram'] //Bring data to the responses
-//
-//   paginationInput: {
-//     entriesPerPage: 10 //Quantity
-//   },
-//
-//   itemFilter: [
-//     {name: 'FreeShippingOnly', value: true}
-//   ],
-//     /*
-//   domainFilter: [
-//     {name: 'domainName', value: 'Digital_Cameras'}
-//   ]
-//     */
-// };
 
 const bot = new Bot(process.env.PAGE_ACCESS_TOKEN, process.env.VERIFICATION);
 const vision = require('@google-cloud/vision')({
@@ -153,12 +140,6 @@ bot.on('postback', async (event, message, data) => {
     }
 });
 
-function itemFilterContains(attr)
-{
-
-
-}
-
 bot.on('message', async message => {
     const {
         sender
@@ -182,6 +163,7 @@ bot.on('message', async message => {
     //testout = new Elements();
 
     if (text) {
+      //res = await (ebayHandler.ebayRequest(user));
       var intent = 1;
       let out = new Elements();
       let msg;
@@ -211,7 +193,7 @@ bot.on('message', async message => {
           await bot.send(sender.id, out);
           break;
         case "execute query":
-          let product = "MacBook pro";
+          let product = "coffe cup";
           user.addQuery(product);
           user.queryOptions.keywords = product.split(" ");
           let qty = user.queryOptions.paginationInput.entriesPerPage;
@@ -222,59 +204,24 @@ bot.on('message', async message => {
           msg = `I'm going to search ${qty} items for the product: ${product} with this special filters: ${itemFilter}`;
           out.add({text: msg});
           await bot.send(sender.id, out);
-          //console.log("Params: ", params);
-          console.log("Query Options: ", user.queryOptions);
           //EBAY
-          ebay.xmlRequest({
-              serviceName: 'Finding',
-              opType: 'findItemsByKeywords',
-              appId: process.env.EBAYAPPID,
-              params: user.queryOptions,
-              parser: ebay.parseResponseJson
-          },
-          function itemsCallback(error, itemsResponse) {
-              if (error) throw error;
-              out = new Elements();
-              var items = itemsResponse.searchResult.item;
-              console.log("Response", itemsResponse.searchResult)
-              if(!items){
-                msg = "Sorry no results for your query!";
-                out.add({text: msg});
-                bot.send(sender.id, out);
-                return;
-              }
-              console.log('Found', items.length, 'items');
-              out = new Elements();
-              for (var i = 0; i < items.length; i++) {
-                  //console.log("shippingInfo: ", items[i].shippingInfo);
-                  let cost = items[i].sellingStatus.convertedCurrentPrice.amount;
-                  console.log("sellingStatus: ", cost);
-                  if(items[i].pictureURLLarge){
-                    imgUrl = items[i].pictureURLLarge;
-                  }else{
-                    imgUrl = items[i].galleryURL;
-                  }
-                  buttons = new Buttons();
-                  buttons.add({
-                      text: 'See on Ebay',
-                      url: items[i].viewItemURL
-                  });
-                  out.add({
-                      image: imgUrl,
-                      text: cost + "$USD - " + items[i].title,
-                      buttons
-                  });
-                  console.log('- ' + items[i].title);
-              }
-              bot.send(sender.id, out);
-          });
+          let ebayData = await (ebayHandler.ebayRequest(user));
+          if(ebayData.status == 2){
+            out = new Elements();
+            msg = "Sorry I have no results for your search! :( ";
+            out.add({text: msg});
+            bot.send(sender.id, out);
+            return;
+          }
+          if(ebayData.status == 1){
+            bot.send(sender.id, ebayData.data);
+          }
           break;
         case "bye":
           msg = Resp.getBye();
           out.add({text: msg});
           await bot.send(sender.id, out);
           break;
-
       }
      }
 
@@ -285,202 +232,70 @@ bot.on('message', async message => {
         console.log("URL IMAGEN: " , images[0]);
         download(images[0], 'tmp.png', function(){
           console.log('Image Saved into server');
-          /*vision.detect(url,types, function(err, detection, apiResponse){
-            console.log("ERROR", err);
-            var logos = detection.logos;
-            var label = detection.labels;
-            console.log("Detect: ", detection);
-            user.queryOptions.keywords = detection.labels;
-            ebay.xmlRequest({
-                serviceName: 'Finding',
-                opType: 'findItemsByKeywords',
-                appId: process.env.EBAYAPPID,
-                params: user.queryOptions,
-                parser: ebay.parseResponseJson
-            },
-            function itemsCallback(error, itemsResponse) {
-                if (error) throw error;
-                out = new Elements();
-                var items = itemsResponse.searchResult.item;
-                //console.log("Response", itemsResponse.searchResult)
-                if(!items){
-                  msg = "Sorry no results for your query!";
-                  out.add({text: msg});
-                  bot.send(sender.id, out);
-                  return;
-                }
-                //console.log('Found', items.length, 'items');
-                out = new Elements();
-                for (var i = 0; i < items.length; i++) {
-                    //console.log("shippingInfo: ", items[i].shippingInfo);
-                    let cost = items[i].sellingStatus.convertedCurrentPrice.amount;
-                    //console.log("sellingStatus: ", cost);
-                    if(items[i].pictureURLLarge){
-                      imgUrl = items[i].pictureURLLarge;
-                    }else{
-                      imgUrl = items[i].galleryURL;
-                    }
-                    buttons = new Buttons();
-                    buttons.add({
-                        text: 'See on Ebay',
-                        url: items[i].viewItemURL
-                    });
-                    out.add({
-                        image: imgUrl,
-                        text: cost + "$USD - " + items[i].title,
-                        buttons
-                    });
-                    //console.log('- ' + items[i].title);
-                }
-                bot.send(sender.id, out);
-            });
-          });*/
-
-          vision.detectSimilar(url)
-          .then((data) => {
-            console.log("SIMILAR", data[1].responses[0].webDetection);
-            const results = data[1].responses[0].webDetection;
-            user.queryOptions.keywords = [];
-            if (results.fullMatchingImages.length > 0) {
-              console.log(`Full matches found: ${results.fullMatchingImages.length}`);
-              results.fullMatchingImages.forEach((image) => {
-                console.log(`  URL: ${image.url}`);
-                console.log(`  Score: ${image.score}`);
-              });
-            }
-
-            if (results.partialMatchingImages.length > 0) {
-              console.log(`Partial matches found: ${results.partialMatchingImages.length}`);
-              results.partialMatchingImages.forEach((image) => {
-                console.log(`  URL: ${image.url}`);
-                console.log(`  Score: ${image.score}`);
-              });
-            }
-
-            if (results.webEntities.length > 0) {
-              console.log(`Web entities found: ${results.webEntities.length}`);
-              results.webEntities.forEach((webEntity) => {
-                if(webEntity.score > .9) user.queryOptions.keywords.push(webEntity.description);
-                console.log(`  Description: ${webEntity.description}`);
-                console.log(`  Score: ${webEntity.score}`);
-              });
-            }
-
-            //user.queryOptions.keywords = detection.labels;
-            msg = "I think your serching for something with: ";
-
-            user.queryOptions.keywords.push(user.queryOptions.keywords[0].split(" ")[0]);
-            console.log("RESULTS TO SEND: ", user.queryOptions.keywords);
-            for(var j = 0; j < user.queryOptions.keywords.length; j++)
+          visionHandler.getVisionResponse(user, url).then(visionData=>{
+            console.log("Vision Out", visionData);
+            if(visionData.status == 2)
             {
-              //console.log("Split: ", user.queryOptions.keywords[j].split(" "));
-              if(user.queryOptions.keywords[j].split(" ").length > 1)
-              {
-                console.log("Splitie");
-                if(!user.queryOptions.keywords.includes(user.queryOptions.keywords[j].split(" ")[0]))
-                  user.queryOptions.keywords.push(user.queryOptions.keywords[j].split(" ")[0]);
-              }
-              msg = msg + " - " + user.queryOptions.keywords[j];
+              out = new Elements();
+              msg = "Sorry! I don't understand this image, try with another angle";
+              out.add({text: msg});
+              bot.send(sender.id, out);
+              return;
             }
-            console.log("Final: ", user.queryOptions.keywords);
-            out.add({text: msg});
-            bot.send(sender.id, out);
+            if(visionData.status == 1)
+            {
+              msg = "I think your serching for something with: ";
+              user.queryOptions.keywords = visionData.data;
+              for(var j = 0; j < user.queryOptions.keywords.length; j++)
+              {
+                msg = msg + " - " + user.queryOptions.keywords[j];
+              }
+              console.log("Final: ", user.queryOptions.keywords);
+              out.add({text: msg});
+              bot.send(sender.id, out);
 
-            ebay.xmlRequest({
-                  serviceName: 'Finding',
-                  opType: 'findItemsByKeywords',
-                  appId: process.env.EBAYAPPID,
-                  params: user.queryOptions,
-                  parser: ebay.parseResponseJson
-              },
-              function itemsCallback(error, itemsResponse) {
-                  if (error) throw error;
-                  out = new Elements();
-                  var items = itemsResponse.searchResult.item;
-                  //console.log("Response", itemsResponse.searchResult)
-                  if(!items){
-                    msg = "Sorry no results for your query!";
+              ebayHandler.ebayRequest(user)
+                .then(ebayData =>{
+                  if(ebayData.status == 2){
+                    out = new Elements();
+                    msg = "Sorry I have no results for your search! :( ";
                     out.add({text: msg});
                     bot.send(sender.id, out);
                     return;
                   }
-                  //console.log('Found', items.length, 'items');
-                  out = new Elements();
-                  for (var i = 0; i < items.length; i++) {
-                      //console.log("shippingInfo: ", items[i].shippingInfo);
-                      let cost = items[i].sellingStatus.convertedCurrentPrice.amount;
-                      //console.log("sellingStatus: ", cost);
-                      if(items[i].pictureURLLarge){
-                        imgUrl = items[i].pictureURLLarge;
-                      }else{
-                        imgUrl = items[i].galleryURL;
-                      }
-                      buttons = new Buttons();
-                      buttons.add({
-                          text: 'See on Ebay',
-                          url: items[i].viewItemURL
-                      });
-                      out.add({
-                          image: imgUrl,
-                          text: cost + "$USD - " + items[i].title,
-                          buttons
-                      });
+                  if(ebayData.status == 1){
+                    bot.send(sender.id, ebayData.data);
                   }
-                  bot.send(sender.id, out);
-              });
-            });
+                });
+            }
+          })
 
-          vision.detectLabels(url)
-            .then((results) => {
-              console.log("LABELS", results[0]);
-              const labels = results[0];
-
-              console.log('Labels:');
-              labels.forEach((label) => console.log(label));
-            });
-
-          vision.detectLandmarks(url)
-            .then((results) => {
-              console.log("LANDMARKS", results[0]);
-              const landmarks = results[0];
-
-              console.log('Landmarks:');
-              landmarks.forEach((landmark) => console.log(landmark));
-            });
-
-
-          vision.detectLogos(url)
-          .then((results) => {
-            console.log("LOGOS", results[0]);
-            const logos = results[0];
-
-            console.log('Logos:');
-            logos.forEach((logo) => console.log(logo));
-          });
-
-          vision.detectProperties(url)
-          .then((results) => {
-            console.log("PROPERTIES", results[0]);
-            const properties = results[0];
-
-            console.log('Colors:');
-            properties.colors.forEach((color) => console.log(color));
-          });
 
         });
-
     }
 
     if (videos) {
         console.log(videos); // ['http://...', 'http://...']
+        out = new Elements();
+        msg = "Sorry I'm not that smart, i dont know about videos";
+        out.add({text: msg});
+        bot.send(sender.id, out);
     }
 
     if (location) {
         console.log(location); // {title, long, lat, url}
+        out = new Elements();
+        msg = "I see that you are at: " + location.title + "... in the next versions I will change settings for your location! :)";
+        out.add({text: msg});
+        bot.send(sender.id, out);
     }
 
     if (audio) {
         console.log(audio); // url
+        out = new Elements();
+        msg = "Sorry! i dont understand human voices or sounds";
+        out.add({text: msg});
+        bot.send(sender.id, out);
     }
 });
 
