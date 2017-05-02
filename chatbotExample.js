@@ -1,6 +1,7 @@
 require('dotenv').config();
 require('./userData.js');
 require('./responses.js');
+const port = 3000;
 const moment = require('moment');
 const fs = require('fs');
 const request = require('request');
@@ -312,5 +313,5 @@ bot.on('message', async message => {
 const app = express();
 app.use('/facebook', bot.router());
 
-app.listen(3000);
-console.log("Listo bro");
+app.listen(port);
+console.log("Listo bro - Listening on port: " + port);
