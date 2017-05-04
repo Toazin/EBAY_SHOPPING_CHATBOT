@@ -31,12 +31,10 @@ const Resp = new Responses;
 const itemFilter = ["AuthorizedSellerOnly",
         "AvailableTo",
         "BestOfferOnly",
-        "Currency",
         "FeaturedOnly",
         "FreeShippingOnly",
         "GetItFastOnly",
         "LocatedIn",
-        "MaxPrice",
         "MinPrice",
         "OutletSellerOnly",
         "TopRatedSellerOnly"];
@@ -74,8 +72,10 @@ bot.on('postback', async (event, message, data) => {
       }else if(event == "removeFilter"){
         //REMOVER! D:
         for (var i = 0; i < user.queryOptions.itemFilter.length; i++) {
+          console.log("Reviso: ", user.queryOptions.itemFilter[i].name , " = ", data);
           if(data == user.queryOptions.itemFilter[i].name){
-            user.queryOptions.itemFilter(i, 1);
+            console.log("Entre: ");
+            user.queryOptions.itemFilter.splice(i, 1);
             break;
           }
         }
@@ -197,6 +197,7 @@ bot.on('message', async message => {
           break;
         case "search":
           let product = intent.product;
+          //let product = "Clock";
           user.addQuery(product);
           user.queryOptions.keywords = product.split(" ");
           let qty = user.queryOptions.paginationInput.entriesPerPage;
@@ -221,6 +222,11 @@ bot.on('message', async message => {
           }
           break;
         case "bye":
+          msg = Resp.getRandom("bye");
+          out.add({text: msg});
+          await bot.send(sender.id, out);
+          break;
+        case "closingLine":
           msg = Resp.getRandom("bye");
           out.add({text: msg});
           await bot.send(sender.id, out);
@@ -312,6 +318,11 @@ bot.on('message', async message => {
 
 const app = express();
 app.use('/facebook', bot.router());
+// app.use('/test', function(req, res, next) {
+//     // console.log("req", req);
+//     // console.log("res", res);
+//     next("DUDE QE PEDO");
+// });
 
 app.listen(port);
 console.log("Listo bro - Listening on port: " + port);

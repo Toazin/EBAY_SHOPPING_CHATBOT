@@ -10,7 +10,7 @@ User = function (id, name) {
   this.id = id;
   this.state = 1;
   this.name = name;
-  this.confidence = .9;
+  this.confidence = 1.0;
   this.lastLogin = moment(new Date());
   this.queryOptions = {
     paginationInput:{entriesPerPage:5},
