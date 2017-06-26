@@ -9,6 +9,17 @@ cantidad de resultados, filtos de ebay y producto a buscar. Al igual proporciona
 proporciona google vision y trae productos similares de ebay.
 El Bot entiende 4 tipos de intenciones, Hola, Adios, ejecutar busqueda, cambiar parametros de busqueda.
 
+## Usage ##
+- Editar .env file for API keys.
+- turn ngrok on .env port
+- start node
+
+## Chating ##
+- Try: "Change parameters": This allow the user to change query parameters
+- Try: "Search for an PRODUCT": This will execute the search in ebay with parameters selected
+- Try: Sending a Photo: This will search similar products in ebay
+- Try: "Whats up": For executing a greeting
+- Try: "Bye!": For executing a Bye.
 ## API's ##
 - Facebook messenger
 - Ebay
@@ -26,6 +37,10 @@ El Bot entiende 4 tipos de intenciones, Hola, Adios, ejecutar busqueda, cambiar 
 - Kimberly Luna
 - Miguel Basilio
 - Juan Andrés Rocha
+
+## Repositorio Original ##
+- https://github.com/Kimbuca/shopping_chatbot
+- Este repositorio es para mantener el código funcional final. Toda la administración se llevo en el repo posterior.
 
 
 
