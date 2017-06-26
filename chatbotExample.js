@@ -1,7 +1,7 @@
 require('dotenv').config();
 require('./userData.js');
 require('./responses.js');
-const port = 3000;
+const port = process.env.PORT;
 const moment = require('moment');
 const fs = require('fs');
 const request = require('request');
@@ -312,6 +312,13 @@ bot.on('message', async message => {
 
 const app = express();
 app.use('/facebook', bot.router());
+// app.use('/test', function(req, res, next) {
+//     // console.log("req", req);
+//     // console.log("res", res);
+//     next("DUDE QE PEDO");
+// });
 
-app.listen(port);
-console.log("Listo bro - Listening on port: " + port);
+app.listen(port, function () {
+    console.log("Listo bro - Listening on port: " + port);
+
+});
